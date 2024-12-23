@@ -20,12 +20,17 @@ export default function init( form ) {
 		unitTag: formData.get( '_wpcf7_unit_tag' ),
 		containerPost: absInt( formData.get( '_wpcf7_container_post' ) ),
 		parent: form.closest( '.wpcf7' ),
+		get schema() {
+			return wpcf7.schemas.get( this.id );
+		},
 	};
 
-	form.querySelectorAll( '.wpcf7-submit' ).forEach( element => {
+	wpcf7.schemas.set( form.wpcf7.id, undefined );
+
+	form.querySelectorAll( '.has-spinner' ).forEach( element => {
 		element.insertAdjacentHTML(
 			'afterend',
-			'<span class="ajax-loader"></span>'
+			'<span class="wpcf7-spinner"></span>'
 		);
 	} );
 
@@ -47,9 +52,7 @@ export default function init( form ) {
 	} );
 
 	form.addEventListener( 'submit', event => {
-		const submitter = event.submitter;
-		wpcf7.submit( form, { submitter } );
-
+		wpcf7.submit( form, { submitter: event.submitter } );
 		event.preventDefault();
 	} );
 
@@ -71,5 +74,25 @@ export default function init( form ) {
 		if ( event.detail.apiResponse.quiz ) {
 			resetQuiz( form, event.detail.apiResponse.quiz );
 		}
+	} );
+
+	form.addEventListener( 'change', event => {
+		if ( event.target.closest( '.wpcf7-form-control' ) ) {
+			wpcf7.validate( form, { target: event.target } );
+		}
+	} );
+
+	form.addEventListener( 'wpcf7statuschanged', event => {
+		const status = event.detail.status;
+
+		form.querySelectorAll( '.active-on-any' ).forEach( elm => {
+			elm.removeAttribute( 'inert' );
+			elm.classList.remove( 'active-on-any' );
+		} );
+
+		form.querySelectorAll( `.inert-on-${ status }` ).forEach( elm => {
+			elm.setAttribute( 'inert', 'inert' );
+			elm.classList.add( 'active-on-any' );
+		} );
 	} );
 }

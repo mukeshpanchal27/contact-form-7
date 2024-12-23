@@ -1,3 +1,5 @@
+import { triggerEvent } from './event';
+
 export const setStatus = ( form, status ) => {
 	const defaultStatuses = new Map( [
 		// 0: Status in API response, 1: Status in HTML class
@@ -10,6 +12,8 @@ export const setStatus = ( form, status ) => {
 		[ 'mail_failed', 'failed' ],
 		[ 'submitting', 'submitting' ],
 		[ 'resetting', 'resetting' ],
+		[ 'validating', 'validating' ],
+		[ 'payment_required', 'payment-required' ],
 	] );
 
 	if ( defaultStatuses.has( status ) ) {
@@ -30,6 +34,18 @@ export const setStatus = ( form, status ) => {
 
 	if ( prevStatus && prevStatus !== status ) {
 		form.classList.remove( prevStatus );
+
+		const detail = {
+			contactFormId: form.wpcf7.id,
+			pluginVersion: form.wpcf7.pluginVersion,
+			contactFormLocale: form.wpcf7.locale,
+			unitTag: form.wpcf7.unitTag,
+			containerPostId: form.wpcf7.containerPost,
+			status: form.wpcf7.status,
+			prevStatus,
+		};
+
+		triggerEvent( form, 'statuschanged', detail );
 	}
 
 	return status;
